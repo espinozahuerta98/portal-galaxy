@@ -1,0 +1,81 @@
+﻿@page "/categorias/list"
+@inject ICategoriaProxy Proxy
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+<ListaGenerica TItem="CategoriaDtoResponse" Lista="Categorias" Titulo="Lista de Categorias" BotonNuevo="OnNuevo">
+    <Cabeceras>
+        <th class="text-center">Id</th>
+        <th class="text-center">Categoría</th>
+        <th class="text-center">Acciones</th>
+    </Cabeceras>
+    <Detalles>
+        <td class="text-center">@context.Id</td>
+        <td class="text-center">@context.Nombre</td>
+        <td class="text-center">
+            <BotonesAccion TItem="CategoriaDtoResponse"
+                           Item="context"
+                           BotonEditar="EditarCategoria"
+                           BotonEliminar="EliminarCategoria" />
+        </td>
+    </Detalles>
+</ListaGenerica>
+
+<LoadingComponent IsLoading="IsLoading" />
+
+@code {
+
+    public ICollection<CategoriaDtoResponse>? Categorias { get; set; }
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            await OnLoad();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task OnLoad()
+    {
+        Categorias = await Proxy.ListAsync();
+    }
+
+    private void OnNuevo()
+    {
+        NavigationManager.NavigateTo("/categorias/nuevo");
+    }
+
+    private void EditarCategoria(CategoriaDtoResponse item)
+    {
+        NavigationManager.NavigateTo($"/categorias/editar/{item.Id}");
+    }
+
+    private async Task EliminarCategoria(CategoriaDtoResponse item)
+    {
+        try
+        {
+            IsLoading = true;
+            await Proxy.DeleteAsync(item.Id);
+            await OnLoad();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+}
